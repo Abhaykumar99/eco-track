@@ -7,7 +7,7 @@
 
 <br />
 
-![EcoTrack Cover](https://placehold.co/1200x400/10B981/FFFFFF?text=EcoTrack+Pro+-+HackForge+2k26)
+![EcoTrack Cover](https://via.placeholder.com/1200x600/10B981/FFFFFF?text=EcoTrack+Pro+-+HackForge+2024)
 
 > **EcoTrack Pro** is a gamified, production-ready campus sustainability platform designed to convert eco-friendly actions into fun, rewarding habits. By bridging real-world carbon offset with engaging student-driven leaderboards, we gamify saving the planet.
 
