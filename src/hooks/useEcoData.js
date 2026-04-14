@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { getStoredData, setStoredData, clearStoredData, getTodayKey } from "../utils/storage";
 import { BADGES, ACTIVITIES } from "../utils/constants";
 import { calculateStreak } from "../utils/calculations";
+import { activityAPI } from "../utils/api";
 
 export default function useEcoData() {
   const [data, setData] = useState(() => getStoredData());
@@ -45,7 +46,14 @@ export default function useEcoData() {
 
   const logActivity = useCallback(
     (activityId, quantity) => {
-      if (!data) return { success: false, message: "Not logged in" };
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+      
+      console.log("Token:", token);
+
+      if (!data || !token || !user) {
+        return { success: false, message: "Session expired, please login again" };
+      }
 
       const today = getTodayKey();
       let currentDailyCount = data.dailyCount;
@@ -106,13 +114,9 @@ export default function useEcoData() {
       setData(newData);
 
       // Async sync to backend (JWT-auth)
-      const token = localStorage.getItem('ecotrack_token');
       if (token) {
-        fetch('/api/activities/sync', {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ pointsEarned, co2Saved, activityName: activity.name }),
-        }).catch(err => console.error("Sync failed:", err));
+        activityAPI.sync({ pointsEarned, co2Saved, activityName: activity.name })
+          .catch(err => console.error("Sync failed:", err));
       }
       return {
         success: true,
@@ -127,7 +131,12 @@ export default function useEcoData() {
 
   const claimBadge = useCallback(
     (badgeId) => {
-      if (!data) return false;
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+
+      console.log("Token:", token);
+
+      if (!data || !token || !user) return false;
       if ((data.badges || []).includes(badgeId)) return false;
 
       const badge = BADGES.find((b) => b.id === badgeId);
@@ -147,13 +156,9 @@ export default function useEcoData() {
       }));
 
       // Async sync to backend (JWT-auth)
-      const token = localStorage.getItem('ecotrack_token');
       if (token) {
-        fetch('/api/activities/badges', {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ badgeId }),
-        }).catch(err => console.error("Badge sync failed:", err));
+        activityAPI.claimBadge(badgeId)
+          .catch(err => console.error("Badge sync failed:", err));
       }
 
       return true;

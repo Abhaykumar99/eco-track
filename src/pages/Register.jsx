@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { showToast } from "../components/Toast";
 import ParticleBackground from "../components/ParticleBackground";
 import confetti from "canvas-confetti";
+import { initUser } from "../utils/storage";
 import { UserPlus, ArrowRight, Mail, Lock, User, Building, Eye, EyeOff } from "lucide-react";
 
 const DEPARTMENTS = ["CSE", "Mechanical", "Electrical", "Civil", "Hostel", "Mess", "Library", "Other"];
@@ -36,6 +37,8 @@ export default function Register() {
     setLoading(true);
     try {
       const userData = await register(form);
+      // Initialize local gamification tracking for the new session
+      initUser(userData.name, userData.avatar, userData._id);
 
       confetti({
         particleCount: 150,

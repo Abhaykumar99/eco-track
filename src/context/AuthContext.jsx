@@ -6,11 +6,11 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('ecotrack_user');
+      const stored = localStorage.getItem('user');
       return stored ? JSON.parse(stored) : null;
     } catch { return null; }
   });
-  const [token, setToken] = useState(() => localStorage.getItem('ecotrack_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   // Verify token on mount
@@ -19,14 +19,14 @@ export function AuthProvider({ children }) {
       authAPI.me()
         .then(res => {
           setUser(res.data);
-          localStorage.setItem('ecotrack_user', JSON.stringify(res.data));
+          localStorage.setItem('user', JSON.stringify(res.data));
         })
         .catch(() => {
           // Token invalid
           setToken(null);
           setUser(null);
-          localStorage.removeItem('ecotrack_token');
-          localStorage.removeItem('ecotrack_user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         })
         .finally(() => setLoading(false));
     } else {
@@ -39,8 +39,8 @@ export function AuthProvider({ children }) {
     const { token: newToken, user: userData } = res.data;
     setToken(newToken);
     setUser(userData);
-    localStorage.setItem('ecotrack_token', newToken);
-    localStorage.setItem('ecotrack_user', JSON.stringify(userData));
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(userData));
     return userData;
   }, []);
 
@@ -49,16 +49,16 @@ export function AuthProvider({ children }) {
     const { token: newToken, user: userData } = res.data;
     setToken(newToken);
     setUser(userData);
-    localStorage.setItem('ecotrack_token', newToken);
-    localStorage.setItem('ecotrack_user', JSON.stringify(userData));
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(userData));
     return userData;
   }, []);
 
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('ecotrack_token');
-    localStorage.removeItem('ecotrack_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     // Keep eco data in localStorage for returning users
   }, []);
 
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await authAPI.me();
       setUser(res.data);
-      localStorage.setItem('ecotrack_user', JSON.stringify(res.data));
+      localStorage.setItem('user', JSON.stringify(res.data));
       return res.data;
     } catch { return null; }
   }, []);

@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { showToast } from "../components/Toast";
 import ParticleBackground from "../components/ParticleBackground";
 import confetti from "canvas-confetti";
+import { initUser } from "../utils/storage";
 import { Leaf, ArrowRight, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const pageVariants = {
@@ -31,6 +32,9 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
     try {
       const userData = await login(email, password);
+      // Initialize local gamification tracking for the session
+      initUser(userData.name, userData.avatar, userData._id);
+      
       if (onLoginSuccess) onLoginSuccess();
 
       confetti({

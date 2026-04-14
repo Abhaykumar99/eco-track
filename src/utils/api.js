@@ -9,7 +9,7 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('ecotrack_token');
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,8 +21,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('ecotrack_token');
-      localStorage.removeItem('ecotrack_user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       // Don't redirect if already on login
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
         window.location.href = '/';

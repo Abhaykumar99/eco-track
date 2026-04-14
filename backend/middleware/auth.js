@@ -6,6 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'ecotrack_secret_2024';
 // Verify JWT token
 const verifyToken = async (req, res, next) => {
   try {
+    console.log("Auth header:", req.headers.authorization); // User requested debug
+
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Access denied. No token provided.' });
