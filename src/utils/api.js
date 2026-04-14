@@ -37,6 +37,7 @@ export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   me: () => api.get('/auth/me'),
+  changePassword: (data) => api.put('/auth/change-password', data),
 };
 
 // Activities
@@ -71,6 +72,9 @@ export const leaderboardAPI = {
 // Admin
 export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
+  getUsers: () => api.get('/admin/users'),
+  createAdmin: (data) => api.post('/admin/create', data),
+  resetPassword: (id, newPassword) => api.put(`/admin/reset-password/${id}`, { newPassword }),
 };
 
 export default api;

@@ -6,7 +6,7 @@ import { showToast } from "../components/Toast";
 import GlassCard from "../components/GlassCard";
 import Loader from "../components/Loader";
 import { pageVariants, staggerContainer, staggerItem } from "../utils/animations";
-import { Shield, Users, AlertTriangle, CheckCircle, BarChart3, Clock, X, Upload, RotateCcw, Eye, MessageSquare, Image } from "lucide-react";
+import { Shield, Users, AlertTriangle, CheckCircle, BarChart3, Clock, X, Upload, RotateCcw, Eye, MessageSquare, Image, Key, Plus, Lock } from "lucide-react";
 
 const STATUS_CONFIG = {
   pending: { bg: "rgba(245,158,11,0.15)", color: "#F59E0B", label: "🟡 Pending" },
@@ -27,6 +27,12 @@ export default function AdminPanel() {
   const [updating, setUpdating] = useState(false);
   const [detailView, setDetailView] = useState(null);
   const [filterStatus, setFilterStatus] = useState("");
+  const [activeTab, setActiveTab] = useState("tickets");
+  const [usersList, setUsersList] = useState([]);
+  
+  // Admin Creation Form State
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminForm, setAdminForm] = useState({ name: "", email: "", password: "", department: "IT" });
 
   useEffect(() => { loadData(); }, [filterStatus]);
 
@@ -34,17 +40,52 @@ export default function AdminPanel() {
     try {
       const params = {};
       if (filterStatus) params.status = filterStatus;
-      const [statsRes, ticketsRes] = await Promise.all([
+      const [statsRes, ticketsRes, usersRes] = await Promise.all([
         adminAPI.getStats(),
         ticketAPI.getAll(params),
+        adminAPI.getUsers(),
       ]);
       setStats(statsRes.data);
       setTickets(Array.isArray(ticketsRes.data) ? ticketsRes.data : []);
+      setUsersList(Array.isArray(usersRes.data) ? usersRes.data : []);
     } catch (err) {
       console.error(err);
       showToast("Failed to load admin data", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      await adminAPI.createAdmin(adminForm);
+      showToast("Admin created successfully!", "success");
+      setShowAdminModal(false);
+      setAdminForm({ name: "", email: "", password: "", department: "IT" });
+      loadData();
+    } catch (err) {
+      showToast(err.response?.data?.error || "Failed to create admin", "error");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleResetPassword = async (userId) => {
+    const newPass = prompt("Enter new temporary password (min 6 chars):");
+    if (!newPass || newPass.length < 6) {
+      if (newPass !== null) showToast("Password must be at least 6 characters.", "warning");
+      return;
+    }
+    setUpdating(true);
+    try {
+      await adminAPI.resetPassword(userId, newPass);
+      showToast("Password reset successfully. Please share this with the user.", "success");
+    } catch (err) {
+      showToast(err.response?.data?.error || "Failed to reset password", "error");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -182,11 +223,131 @@ export default function AdminPanel() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
+      {/* Header & Tabs */}
       <div style={{ marginBottom: "1.5rem" }}>
         <h1 className="page-title"><Shield size={28} style={{ verticalAlign: "middle", marginRight: 8 }} /> Admin Panel</h1>
-        <p className="page-subtitle">Manage campus issues, resolve tickets, and monitor platform health</p>
+        
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem", borderBottom: "1px solid var(--card-border)" }}>
+          <button 
+            onClick={() => setActiveTab("tickets")}
+            style={{ padding: "0.8rem 1.5rem", background: "none", border: "none", borderBottom: activeTab === "tickets" ? "3px solid var(--primary)" : "3px solid transparent", color: activeTab === "tickets" ? "var(--primary)" : "var(--text-secondary)", fontWeight: 600, fontSize: "1rem", cursor: "pointer", transition: "all 0.2s" }}
+          >
+            🎟️ Ticket Management
+          </button>
+          <button 
+            onClick={() => setActiveTab("users")}
+            style={{ padding: "0.8rem 1.5rem", background: "none", border: "none", borderBottom: activeTab === "users" ? "3px solid var(--primary)" : "3px solid transparent", color: activeTab === "users" ? "var(--primary)" : "var(--text-secondary)", fontWeight: 600, fontSize: "1rem", cursor: "pointer", transition: "all 0.2s" }}
+          >
+            🛡️ User Controls
+          </button>
+        </div>
       </div>
+
+      {activeTab === "users" ? (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+          
+          {/* Admin Creation Modal */}
+          <AnimatePresence>
+            {showAdminModal && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+                onClick={() => setShowAdminModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ background: "var(--bg, white)", borderRadius: 20, padding: "2rem", maxWidth: 450, width: "100%", boxShadow: "0 16px 48px rgba(0,0,0,0.2)" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                    <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0 }}><Shield size={22} style={{ color: "var(--primary)" }} /> Create New Admin</h2>
+                    <button onClick={() => setShowAdminModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}><X size={20} /></button>
+                  </div>
+
+                  <form onSubmit={handleCreateAdmin} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                    <div style={{ textAlign: "left" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>Name</label>
+                      <input type="text" value={adminForm.name} onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })} required style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--card-border)", background: "var(--bg-secondary)", color: "var(--text-primary)" }} />
+                    </div>
+                    <div style={{ textAlign: "left" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>Email</label>
+                      <input type="email" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} required style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--card-border)", background: "var(--bg-secondary)", color: "var(--text-primary)" }} />
+                    </div>
+                    <div style={{ textAlign: "left" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>Temporary Password</label>
+                      <input type="text" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} required minLength={6} style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--card-border)", background: "var(--bg-secondary)", color: "var(--text-primary)" }} />
+                    </div>
+                    <button type="submit" disabled={updating} style={{ padding: "14px", borderRadius: 10, background: "var(--primary)", border: "none", color: "white", fontWeight: 700, cursor: "pointer", marginTop: "0.5rem" }}>
+                      {updating ? "Creating..." : "Create Admin Account"}
+                    </button>
+                  </form>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.4rem", margin: 0 }}>Registered Users</h2>
+            <button onClick={() => setShowAdminModal(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 10, background: "rgba(124,58,237,0.1)", border: "1px solid var(--primary)", color: "var(--primary)", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+              <Plus size={18} /> Create Admin
+            </button>
+          </div>
+
+          <GlassCard style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "rgba(0,0,0,0.02)", borderBottom: "1px solid var(--card-border)" }}>
+                    <th style={{ padding: "14px 20px", fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "uppercase" }}>User</th>
+                    <th style={{ padding: "14px 20px", fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "uppercase" }}>Role</th>
+                    <th style={{ padding: "14px 20px", fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "uppercase" }}>Stats</th>
+                    <th style={{ padding: "14px 20px", fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "uppercase" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersList.map((u) => (
+                    <tr key={u._id} style={{ borderBottom: "1px solid var(--card-border)" }}>
+                      <td style={{ padding: "14px 20px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>
+                            {u.avatar || "👤"}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{u.name}</div>
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 20px" }}>
+                        {u.role === "admin" ? (
+                          <span style={{ padding: "4px 10px", background: "rgba(124,58,237,0.1)", color: "var(--primary)", borderRadius: 100, fontSize: "0.75rem", fontWeight: 700 }}>🛡️ Admin</span>
+                        ) : (
+                          <span style={{ padding: "4px 10px", background: "rgba(16,185,129,0.1)", color: "#10B981", borderRadius: 100, fontSize: "0.75rem", fontWeight: 700 }}>🎓 Student</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "14px 20px" }}>
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}><strong>{u.points}</strong> pts</div>
+                      </td>
+                      <td style={{ padding: "14px 20px" }}>
+                        <button 
+                          onClick={() => handleResetPassword(u._id)}
+                          style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.05)", color: "#EF4444", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}
+                        >
+                          <Lock size={14} /> Reset Pass
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {usersList.length === 0 && (
+                    <tr><td colSpan="4" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>No users loaded.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </GlassCard>
+        </motion.div>
+      ) : (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
 
       {/* Stats */}
       {stats && (
@@ -332,6 +493,9 @@ export default function AdminPanel() {
             );
           })}
         </div>
+      )}
+      {/* End of tab content */}
+        </motion.div>
       )}
     </motion.div>
   );

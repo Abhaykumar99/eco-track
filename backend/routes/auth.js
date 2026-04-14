@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
       email: email.toLowerCase(),
       password,
       department: department || 'CSE',
-      role: role || 'student',
+      role: 'student', // Security override: strictly enforce default role
       avatar: avatar || '🌱',
     });
 
@@ -71,6 +71,31 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', verifyToken, async (req, res) => {
   res.json(req.user);
+});
+
+// PUT /api/auth/change-password
+router.put('/change-password', verifyToken, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    
+    if (!oldPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Valid old and new password (min 6 chars) are required.' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) return res.status(401).json({ error: 'Incorrect old password.' });
+
+    user.password = newPassword;
+    await user.save(); // triggers pre-save hook for bcrypt
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 module.exports = router;

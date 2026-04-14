@@ -118,14 +118,6 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="login-field" style={{ display: "flex", gap: "0.75rem" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 12, border: form.role === "student" ? "2px solid var(--primary)" : "1px solid var(--card-border)", cursor: "pointer", background: form.role === "student" ? "rgba(124,58,237,0.08)" : "transparent", flex: 1, justifyContent: "center" }}>
-              <input type="radio" name="role" value="student" checked={form.role === "student"} onChange={() => update("role", "student")} style={{ display: "none" }} /> 🎓 Student
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 12, border: form.role === "admin" ? "2px solid var(--primary)" : "1px solid var(--card-border)", cursor: "pointer", background: form.role === "admin" ? "rgba(124,58,237,0.08)" : "transparent", flex: 1, justifyContent: "center" }}>
-              <input type="radio" name="role" value="admin" checked={form.role === "admin"} onChange={() => update("role", "admin")} style={{ display: "none" }} /> 🛡️ Admin
-            </label>
-          </div>
 
           <motion.button className="login-btn" type="submit" disabled={loading} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             {loading ? (
