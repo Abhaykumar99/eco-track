@@ -4,6 +4,7 @@ const STORAGE_KEY = "ecotrack_data";
 
 const defaultData = () => ({
   user: "",
+  userId: null,
   avatar: "🌿",
   points: 0,
   activities: [],
@@ -43,10 +44,11 @@ export function isLoggedIn() {
   return data && data.user && data.user.trim().length > 0;
 }
 
-export function initUser(name, avatar) {
+export function initUser(name, avatar, userId) {
   const data = {
     ...defaultData(),
     user: name.trim(),
+    userId: userId,
     avatar,
     joinDate: new Date().toISOString(),
     lastDate: new Date().toDateString(),

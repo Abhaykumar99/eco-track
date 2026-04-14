@@ -2147,3 +2147,66 @@ img {
 .dark .recharts-cartesian-grid-vertical line {
   stroke: rgba(255, 255, 255, 0.06) !important;
 }
+
+/* ─── Shake Animation ─────────────────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+.shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+/* ─── Streak Fire Pulse ───────────────────────────────────────── */
+@keyframes firePulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.4); transform: scale(1.08); }
+}
+.streak-fire {
+  animation: firePulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Gradient Primary Text ───────────────────────────────────── */
+.grad-text {
+  background: linear-gradient(135deg, #7C3AED, #10B981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Campus Impact Ticker ────────────────────────────────────── */
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.campus-ticker {
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(16,185,129,0.08));
+  border-radius: 12px;
+  padding: 12px 0;
+  margin-top: 1.5rem;
+}
+.campus-ticker-inner {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerScroll 25s linear infinite;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.campus-ticker-inner span {
+  margin: 0 2rem;
+}
+
+/* ─── 3D Utilities ────────────────────────────────────────────── */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import LeaderboardRow from "../components/LeaderboardRow";
 import GlassCard from "../components/GlassCard";
@@ -14,31 +14,47 @@ export default function Leaderboard({ ecoData }) {
   const { user, avatar, points, totalCO2 } = ecoData;
   const [tab, setTab] = useState("all");
 
+  const [apiUsers, setApiUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/leaderboard')
+      .then(res => res.json())
+      .then(data => setApiUsers(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error("Could not fetch leaderboard", err);
+        setApiUsers([]);
+      });
+  }, []);
+
   const allUsers = useMemo(() => {
-    const realUser = { name: user, avatar, points, co2: totalCO2, isCurrentUser: true };
-    let list;
+    // Merge real current user if not in apiUsers or just use apiUsers 
+    // Actually our api returns all users. The current user is in `apiUsers`.
+    // Let's identify the current user using ecoData.userId
+    let list = (Array.isArray(apiUsers) ? apiUsers : []).map(u => ({
+      name: u.name,
+      avatar: u.avatar || "🌿",
+      points: u.points,
+      co2: u.co2Saved || 0,
+      isCurrentUser: u._id === ecoData.data?.userId
+    }));
+
+    // Fallback if empty API (e.g. offline)
+    if (list.length === 0) {
+      list = [...FAKE_USERS, { name: user, avatar, points, co2: totalCO2, isCurrentUser: true }];
+    }
 
     if (tab === "weekly") {
       // Simulate weekly points as fraction of total
-      list = [
-        ...FAKE_USERS.map((u) => ({
-          ...u,
-          points: Math.round(u.points * (0.1 + Math.random() * 0.2)),
-          co2: parseFloat((u.co2 * (0.1 + Math.random() * 0.2)).toFixed(1)),
-        })),
-        {
-          ...realUser,
-          points: Math.round(points * 0.3),
-          co2: parseFloat((totalCO2 * 0.3).toFixed(1)),
-        },
-      ];
-    } else {
-      list = [...FAKE_USERS, realUser];
+      list = list.map(u => ({
+        ...u,
+        points: Math.round(u.points * (0.1 + Math.random() * 0.2)),
+        co2: parseFloat((u.co2 * (0.1 + Math.random() * 0.2)).toFixed(1)),
+      }));
     }
 
     list.sort((a, b) => b.points - a.points);
     return list;
-  }, [user, avatar, points, totalCO2, tab]);
+  }, [apiUsers, user, avatar, points, totalCO2, tab, ecoData.data?.userId]);
 
   const userRank = allUsers.findIndex((u) => u.isCurrentUser) + 1;
 

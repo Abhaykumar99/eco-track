@@ -19,6 +19,8 @@ import {
   Trophy,
   Gift,
   Flame,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import GlassCard from "../components/GlassCard";
 import AnimatedCounter from "../components/AnimatedCounter";
@@ -165,14 +167,14 @@ export default function Dashboard({ ecoData }) {
 
       {/* Quick Actions */}
       <motion.section className="dash-actions" variants={itemVariant}>
+        <Link to="/issues" className="quick-action-btn" style={{ background: "#EF4444", color: "white" }}>
+          <AlertTriangle size={18} /> Report Issue
+        </Link>
+        <Link to="/solve-task" className="quick-action-btn action-secondary">
+          <CheckCircle size={18} /> Problem Solved
+        </Link>
         <Link to="/activities" className="quick-action-btn action-primary">
-          <PlusIcon /> Log Activity
-        </Link>
-        <Link to="/leaderboard" className="quick-action-btn action-secondary">
-          <Trophy size={18} /> Leaderboard
-        </Link>
-        <Link to="/rewards" className="quick-action-btn action-accent">
-          <Gift size={18} /> Claim Rewards
+          <PlusIcon /> Eco Action
         </Link>
       </motion.section>
 

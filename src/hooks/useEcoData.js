@@ -11,6 +11,25 @@ export default function useEcoData() {
     if (data) setStoredData(data);
   }, [data]);
 
+  // Migration: if they are logged in locally but don't have a backend userId, create one automatically
+  useEffect(() => {
+    if (data && data.user && !data.userId) {
+      console.log("Migrating local session to backend...");
+      fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.user, avatar: data.avatar }),
+      })
+        .then((res) => res.json())
+        .then((userData) => {
+          if (userData && userData._id) {
+            setData(prev => ({ ...prev, userId: userData._id }));
+          }
+        })
+        .catch((err) => console.error("Migration failed:", err));
+    }
+  }, [data?.user, data?.userId]);
+
   // Auto-reset daily count if date changed
   useEffect(() => {
     if (!data) return;
@@ -85,6 +104,16 @@ export default function useEcoData() {
       };
 
       setData(newData);
+
+      // Async sync to backend (JWT-auth)
+      const token = localStorage.getItem('ecotrack_token');
+      if (token) {
+        fetch('/api/activities/sync', {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ pointsEarned, co2Saved, activityName: activity.name }),
+        }).catch(err => console.error("Sync failed:", err));
+      }
       return {
         success: true,
         pointsEarned,
@@ -116,6 +145,17 @@ export default function useEcoData() {
         ...prev,
         badges: [...(prev.badges || []), badgeId],
       }));
+
+      // Async sync to backend (JWT-auth)
+      const token = localStorage.getItem('ecotrack_token');
+      if (token) {
+        fetch('/api/activities/badges', {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ badgeId }),
+        }).catch(err => console.error("Badge sync failed:", err));
+      }
+
       return true;
     },
     [data]

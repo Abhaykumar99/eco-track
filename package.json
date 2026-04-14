@@ -13,11 +13,13 @@
     "vite": "^8.0.4"
   },
   "dependencies": {
+    "axios": "^1.15.0",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-parallax-tilt": "^1.7.323",
     "react-router-dom": "^7.14.1",
     "recharts": "^3.8.1"
   }
